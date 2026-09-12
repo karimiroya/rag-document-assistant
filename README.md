@@ -1,30 +1,26 @@
-# RAG Document Assistant
+# 📚 RAG Document Assistant
 
-A local Retrieval-Augmented Generation (RAG) application.
+A Retrieval-Augmented Generation (RAG) application that allows users to upload PDF documents, create embeddings, search using FAISS similarity retrieval, and view relevant document passages with source pages.
 
-## Features
+## 🌐 Live Application
 
-- PDF loading
-- Text chunking
-- HuggingFace embeddings
-- FAISS vector search
-- Streamlit interface
+Try the deployed version:
 
-## Architecture
+➡️ **[Open RAG Document Assistant](https://rag-document-assistant-kjfmdrqksrbptqb55rpecs.streamlit.app)**
 
-PDF
-↓
-Chunks
-↓
-Embeddings
-↓
-FAISS
-↓
-Similarity Search
-↓
-Relevant passages
+## ✨ Features
 
+- 📄 Upload PDF documents
+- ✂️ Split documents into text chunks
+- 🧠 Generate embeddings using HuggingFace
+- 🔍 Semantic search with FAISS vector database
+- 📌 Display relevant passages
+- 📖 Show source page numbers
 
-## Run
+## 🛠️ Technologies
 
-Install dependencies:
+- Python
+- Streamlit
+- LangChain
+- FAISS
+- PyPDF
