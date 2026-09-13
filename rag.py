@@ -3,6 +3,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
+from transformers import pipeline
+
 
 VECTOR_PATH = "vectorstore/faiss_index"
 
@@ -18,7 +20,6 @@ def load_pdf(pdf_path):
     documents = loader.load()
 
     return documents
-
 
 
 # -------------------------------
@@ -39,7 +40,6 @@ def split_documents(documents):
     return chunks
 
 
-
 # -------------------------------
 # Create embeddings
 # -------------------------------
@@ -53,9 +53,8 @@ def create_embeddings():
     return embeddings
 
 
-
 # -------------------------------
-# Create FAISS database
+# Create FAISS vector database
 # -------------------------------
 
 def create_vector_store(chunks):
@@ -70,7 +69,6 @@ def create_vector_store(chunks):
     return vector_store
 
 
-
 # -------------------------------
 # Save FAISS
 # -------------------------------
@@ -80,7 +78,6 @@ def save_vector_store(vector_store):
     vector_store.save_local(
         VECTOR_PATH
     )
-
 
 
 # -------------------------------
@@ -100,7 +97,6 @@ def load_vector_store():
     return vector_store
 
 
-
 # -------------------------------
 # Full PDF pipeline
 # -------------------------------
@@ -111,35 +107,79 @@ def process_pdf(pdf_path):
         pdf_path
     )
 
-
     chunks = split_documents(
         documents
     )
-
 
     vector_store = create_vector_store(
         chunks
     )
 
-
     save_vector_store(
         vector_store
     )
 
-
     return vector_store, len(chunks)
 
 
-
 # -------------------------------
-# Search FAISS
+# Retrieve relevant chunks
 # -------------------------------
 
-def retrieve_chunks(vector_store, question):
+def retrieve_chunks(
+    vector_store,
+    question,
+    k=3
+):
 
     results = vector_store.similarity_search(
         question,
-        k=3
+        k=k
     )
 
     return results
+
+
+# -------------------------------
+# Load LLM
+# -------------------------------
+
+def load_generator():
+
+    generator = pipeline(
+        task="text2text-generation",
+        model="google/flan-t5-base"
+    )
+
+    return generator
+
+
+# -------------------------------
+# Build context
+# -------------------------------
+
+def build_context(retrieved_chunks):
+
+    context_parts = []
+
+    for chunk in retrieved_chunks:
+
+        page = chunk.metadata.get(
+            "page",
+            0
+        ) + 1
+
+        context_parts.append(
+            f"""
+Page {page}:
+{chunk.page_content}
+"""
+        )
+
+    context = "\n\n".join(
+        context_parts
+    )
+
+    return context
+
+

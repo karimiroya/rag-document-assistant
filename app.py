@@ -2,7 +2,9 @@ import streamlit as st
 
 from rag import (
     process_pdf,
-    retrieve_chunks
+    retrieve_chunks,
+    generate_answer,
+    load_generator
 )
 
 
@@ -15,7 +17,30 @@ st.set_page_config(
     page_icon="📚"
 )
 
-st.title("📚 RAG Document Assistant")
+st.title(
+    "📚 RAG Document Assistant"
+)
+
+st.write(
+    """
+    Upload a PDF and ask questions about its content.
+    The assistant retrieves relevant passages using
+    semantic search and generates an answer using an LLM.
+    """
+)
+
+
+# -------------------------------
+# Cache LLM
+# -------------------------------
+
+@st.cache_resource
+def get_generator():
+
+    return load_generator()
+
+
+generator = get_generator()
 
 
 # -------------------------------
@@ -30,8 +55,18 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file:
 
-    with open("uploaded.pdf", "wb") as f:
-        f.write(uploaded_file.getbuffer())
+    # ---------------------------
+    # Save uploaded PDF
+    # ---------------------------
+
+    with open(
+        "uploaded.pdf",
+        "wb"
+    ) as f:
+
+        f.write(
+            uploaded_file.getbuffer()
+        )
 
 
     # ---------------------------
@@ -39,26 +74,44 @@ if uploaded_file:
     # ---------------------------
 
     if (
-        "vector_store" not in st.session_state
-        or st.session_state.get("file_name") != uploaded_file.name
+        "vector_store"
+        not in st.session_state
+        or
+        st.session_state.get(
+            "file_name"
+        )
+        != uploaded_file.name
     ):
 
-        with st.spinner("Processing PDF..."):
+        with st.spinner(
+            "Processing PDF..."
+        ):
 
-            vector_store, chunk_count = process_pdf(
+            (
+                vector_store,
+                chunk_count
+            ) = process_pdf(
                 "uploaded.pdf"
             )
 
-        st.session_state.vector_store = vector_store
-        st.session_state.file_name = uploaded_file.name
+        st.session_state.vector_store = (
+            vector_store
+        )
+
+        st.session_state.file_name = (
+            uploaded_file.name
+        )
 
         st.success(
-            f"PDF processed successfully: {chunk_count} chunks"
+            f"""
+            PDF processed successfully:
+            {chunk_count} chunks created.
+            """
         )
 
 
     # ---------------------------
-    # Question
+    # Ask question
     # ---------------------------
 
     st.divider()
@@ -70,13 +123,56 @@ if uploaded_file:
 
     if question:
 
-        results = retrieve_chunks(
-            st.session_state.vector_store,
-            question
+        # -----------------------
+        # Retrieve context
+        # -----------------------
+
+        with st.spinner(
+            "Searching document..."
+        ):
+
+            results = retrieve_chunks(
+                st.session_state.vector_store,
+                question,
+                k=3
+            )
+
+
+        # -----------------------
+        # Generate answer
+        # -----------------------
+
+        with st.spinner(
+            "Generating answer..."
+        ):
+
+            answer = generate_answer(
+                question,
+                results,
+                generator
+            )
+
+
+        # -----------------------
+        # Show final answer
+        # -----------------------
+
+        st.subheader(
+            "🤖 Answer"
+        )
+
+        st.write(
+            answer
         )
 
 
-        st.subheader("Relevant Passages")
+        # -----------------------
+        # Show sources
+        # -----------------------
+
+        st.subheader(
+            "📄 Sources"
+        )
 
 
         for i, result in enumerate(
@@ -84,28 +180,25 @@ if uploaded_file:
             start=1
         ):
 
-            page = result.metadata.get(
-                "page",
-                0
-            ) + 1
-
-
-            st.markdown(
-                f"### Result {i}"
+            page = (
+                result.metadata.get(
+                    "page",
+                    0
+                )
+                + 1
             )
 
 
-            st.write(
-                result.page_content
-            )
+            with st.expander(
+                f"""
+                Source {i}
+                — Page {page}
+                """
+            ):
 
-
-            st.caption(
-                f"Source: Page {page}"
-            )
-
-
-            st.divider()
+                st.write(
+                    result.page_content
+                )
 
 
 else:
