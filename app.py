@@ -17,9 +17,7 @@ st.set_page_config(
     page_icon="📚"
 )
 
-st.title(
-    "📚 RAG Document Assistant"
-)
+st.title("📚 RAG Document Assistant")
 
 st.write(
     """
@@ -36,11 +34,7 @@ st.write(
 
 @st.cache_resource
 def get_generator():
-
     return load_generator()
-
-
-generator = get_generator()
 
 
 # -------------------------------
@@ -63,7 +57,6 @@ if uploaded_file:
         "uploaded.pdf",
         "wb"
     ) as f:
-
         f.write(
             uploaded_file.getbuffer()
         )
@@ -74,12 +67,9 @@ if uploaded_file:
     # ---------------------------
 
     if (
-        "vector_store"
-        not in st.session_state
+        "vector_store" not in st.session_state
         or
-        st.session_state.get(
-            "file_name"
-        )
+        st.session_state.get("file_name")
         != uploaded_file.name
     ):
 
@@ -103,10 +93,8 @@ if uploaded_file:
         )
 
         st.success(
-            f"""
-            PDF processed successfully:
-            {chunk_count} chunks created.
-            """
+            f"PDF processed successfully: "
+            f"{chunk_count} chunks created."
         )
 
 
@@ -134,7 +122,7 @@ if uploaded_file:
             results = retrieve_chunks(
                 st.session_state.vector_store,
                 question,
-                k=3
+                k=4
             )
 
 
@@ -145,6 +133,8 @@ if uploaded_file:
         with st.spinner(
             "Generating answer..."
         ):
+
+            generator = get_generator()
 
             answer = generate_answer(
                 question,
@@ -190,10 +180,7 @@ if uploaded_file:
 
 
             with st.expander(
-                f"""
-                Source {i}
-                — Page {page}
-                """
+                f"Source {i} — Page {page}"
             ):
 
                 st.write(
