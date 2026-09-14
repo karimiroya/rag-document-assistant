@@ -2,6 +2,10 @@
 
 A Retrieval-Augmented Generation (RAG) application that allows users to upload PDF documents, create embeddings, search using FAISS similarity retrieval, and view relevant document passages with source pages.
 
+## 🖥️ Application Preview
+
+![RAG Document Assistant Demo](assets/rag-demo.png)
+
 ## 🌐 Live Application
 
 Try the deployed version:
